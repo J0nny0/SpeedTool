@@ -1337,9 +1337,8 @@ public class TextEditor
                 {
                     var newLine = InsertLine(aWhere.mLine + 1);
                     var line = mLines[aWhere.mLine];
-                    newLine.AddRange(line.TakeLast(line.Count - cindex));
-                    
-                    line = line.TakeLast(line.Count - cindex).ToList();
+                    newLine.AddRange(line.Skip(cindex));
+                    line.RemoveRange(cindex, line.Count - cindex);
                 }
                 else
                 {

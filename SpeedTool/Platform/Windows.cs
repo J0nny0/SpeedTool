@@ -37,6 +37,7 @@ public class Window : IDisposable
             input = window.CreateInput();
             images = new Images(gl!);
             controller = new ImGuiController(gl, window, input, () => {
+                GlfwClipboard.WireUp(ImGui.GetIO(), window);
                 LoadDefaultFont();
                 if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     LoadFontEx(Environment.GetFolderPath(Environment.SpecialFolder.Fonts) + "\\segoeui.ttf", Environment.GetFolderPath(Environment.SpecialFolder.Fonts) + "\\meiryo.ttc", 22, "UI");
