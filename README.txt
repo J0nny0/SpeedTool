@@ -1,5 +1,5 @@
-SpeedTool Wayland build (x86_64) - WORKING, save-dialog crash fix
-Built from: J0nny0/SpeedTool branch vibe/wayland-support-5f26ae @ 1de0b0e
+SpeedTool Wayland build (x86_64) - WORKING, save-dialog navigation crash fix
+Built from: J0nny0/SpeedTool branch vibe/wayland-support-5f26ae @ d448617
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
 
