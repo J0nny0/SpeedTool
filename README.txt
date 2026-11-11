@@ -1,5 +1,5 @@
 SpeedTool Wayland + Linux autosplitter build (x86_64)
-Built from: J0nny0/SpeedTool main @ ab56ba8 (vibe/wayland-support-5f26ae @ f9811fb)
+Built from: J0nny0/SpeedTool main @ cac7c03 (vibe/wayland-support-5f26ae @ 3d595de)
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
 
