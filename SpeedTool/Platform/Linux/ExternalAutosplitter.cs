@@ -139,6 +139,7 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
         {
             reader = new ProcessMemoryReader(found);
             pid = found;
+            LogAttachInfo(found);
             lock(sync)
                 CreateEngine();
             IsHooked = true;
@@ -165,6 +166,22 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
         reader = null;
         pid = -1;
         IsHooked = false;
+    }
+
+    private void LogAttachInfo(int found)
+    {
+        try
+        {
+            var baseAddress = ProcMaps.GetModuleBase(found, exeName);
+            Span<byte> magic = stackalloc byte[2];
+            var magicRead = reader!.TryRead(baseAddress, magic);
+            var magicText = magicRead ? $"{(char)magic[0]}{(char)magic[1]}" : "unreadable";
+            DebugLog.SharedInstance.Write($"External autosplitter: {exeName} base=0x{baseAddress:X} magic={magicText}");
+        }
+        catch(Exception ex)
+        {
+            DebugLog.SharedInstance.Write($"External autosplitter: attach info failed: {ex.Message}");
+        }
     }
 
     private void CreateEngine()
