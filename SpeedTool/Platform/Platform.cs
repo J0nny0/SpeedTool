@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Silk.NET.Input.Glfw;
 using Silk.NET.Windowing.Glfw;
 using SpeedTool.Injector;
 using SpeedTool.Platform.Debugging;
+using SpeedTool.Platform.Linux;
 using SpeedTool.Splits;
 using SpeedTool.Timer;
 using SpeedTool.Util;
@@ -291,6 +293,14 @@ public sealed class Platform
         if(game == null)
             return;
 
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            injector?.Dispose();
+            injector = game.ExeName == "" ? null : new ExternalAutosplitter(game.ExeName);
+            sources[(int)TimingMethod.Loadless] = injector == null ? new NoTimer() : injector;
+            return;
+        }
+
         if(InjectorHandler.IsInjectionAvailable)
         {
             injector?.Dispose();
@@ -308,7 +318,7 @@ public sealed class Platform
     Run? run = null;
     Game? game = null;
 
-    InjectorHandler? injector;
+    IAutosplitter? injector;
 
     HotkeyController hotkeyController;
 

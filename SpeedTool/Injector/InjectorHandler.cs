@@ -5,7 +5,7 @@ using SpeedTool.Timer;
 
 namespace SpeedTool.Injector;
 
-public sealed class InjectorHandler : IDisposable, ITimerSource
+public sealed class InjectorHandler : IAutosplitter
 {
     public InjectorHandler(string lookForExe)
     {
