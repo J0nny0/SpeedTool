@@ -1,26 +1,22 @@
 SpeedTool Wayland + Linux autosplitter build (x86_64)
-Built from: J0nny0/SpeedTool main @ aa0ec03 (vibe/wayland-support-5f26ae @ 03bfa40)
+Built from: J0nny0/SpeedTool main @ ae8bd2d (vibe/wayland-support-5f26ae @ 9bab2d0)
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
 
 New in this build:
-- Zombie-process fix: the autosplitter worker is now a background thread, so
-  closing all SpeedTool windows fully exits the process. Old builds could leave
-  a hidden SpeedTool process running with an autosplitter still attached to the
-  game. Before testing, check for strays with:  pgrep -af SpeedTool
-- Log lines now include the SpeedTool PID (attach + heartbeat), so you can tell
-  which instance produced which log lines.
-- Heartbeat now shows readFailures=<count> lastFail=0x<addr>: memory reads
-  failing inside the script (e.g. pointer derefs hitting unmapped memory).
-- debug_message(text) from a script is logged once per distinct text, so a
-  script can print per-frame values without flooding the log.
+- 32-bit game support: the autosplitter now detects the game's bitness from its
+  PE header and dereferences pointers with the correct width (4 or 8 bytes).
+  32-bit games (e.g. NFS13.exe) previously read garbage pointers, so every
+  script value stayed at 0. The log now shows the detected bitness, e.g.
+  "machine=0x014C (32-bit pointers)".
 
 Previous features:
+- Zombie-process fix: background autosplitter worker, PID-tagged log lines,
+  readFailures/lastFail in the 10s heartbeat.
+- debug_message(text) logged once per distinct text (value tracing).
 - Autosplitter diagnostics: timer_start / timer_split calls, loading-state
-  transitions, 10s heartbeat.
-- System clipboard support (copy/paste works everywhere, incl. Wayland).
-- Fixed multi-line paste duplicating text in the script editor.
-- Fixed crash when editing a game's script while the game is hooked.
+  transitions, heartbeat.
+- System clipboard support; multi-line paste fix; script-edit-while-hooked fix.
 - External Lua autosplitter on Linux: loadless timing for Proton/Wine games
   without injection. If attaching fails, run:
   sudo sysctl kernel.yama.ptrace_scope=0
