@@ -120,6 +120,27 @@ public sealed class ExternalAutosplitterTests
     }
 
     [Fact]
+    public void ScriptEnginePointerPathHandles32BitGames()
+    {
+        var host = new FakeHost { PointerSize = 4 };
+        host.Modules["game.exe"] = 0x400000;
+        WritePointer(host, 0x400000 + 0x100, 0x00500000, 4);
+        WritePointer(host, 0x500000 + 0x10, 0x00600000, 4);
+        host.Memory[0x600000] = 42;
+
+        using var engine = new ExternalScriptEngine("""
+            function on_load()
+                base = module_base_address('game.exe')
+                ptr = pointer_path(base + 0x100, 0x10, 0)
+                value = read_int(ptr)
+            end
+        """, host);
+
+        Assert.Equal(0x600000L, Convert.ToInt64(engine.GetGlobal("sandbox_env.ptr")));
+        Assert.Equal(42L, Convert.ToInt64(engine.GetGlobal("sandbox_env.value")));
+    }
+
+    [Fact]
     public void ScriptEngineSandboxBlocksUnsafeFunctions()
     {
         var host = new FakeHost();
@@ -161,9 +182,9 @@ public sealed class ExternalAutosplitterTests
         Assert.True(timer.Value - frozen < TimeSpan.FromMilliseconds(60));
     }
 
-    private static void WritePointer(FakeHost host, long address, long value)
+    private static void WritePointer(FakeHost host, long address, long value, int size = 8)
     {
-        var bytes = BitConverter.GetBytes(value);
+        var bytes = size == 4 ? BitConverter.GetBytes((uint)value) : BitConverter.GetBytes(value);
         for(int i = 0; i < bytes.Length; i++)
             host.Memory[address + i] = bytes[i];
     }
@@ -180,6 +201,8 @@ public sealed class ExternalAutosplitterTests
         public Dictionary<string, long> Modules = new();
         public Dictionary<long, byte> Memory = new();
         public int SplitCalls;
+
+        public int PointerSize { get; set; } = 8;
 
         public bool TryRead(long address, Span<byte> buffer)
         {

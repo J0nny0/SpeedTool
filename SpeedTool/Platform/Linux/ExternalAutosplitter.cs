@@ -187,6 +187,8 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
         reader?.Dispose();
         reader = null;
         pid = -1;
+        pointerSize = 8;
+        pointerSizeDetected = false;
         IsHooked = false;
     }
 
@@ -224,12 +226,35 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
 
         try
         {
-            return ProcMaps.GetModuleBase(pid, name);
+            var baseAddress = ProcMaps.GetModuleBase(pid, name);
+            if(baseAddress != 0 && !pointerSizeDetected)
+            {
+                pointerSizeDetected = true;
+                DetectPointerSize(baseAddress);
+            }
+            return baseAddress;
         }
         catch
         {
             return 0;
         }
+    }
+
+    int IScriptHost.PointerSize => pointerSize;
+
+    private void DetectPointerSize(long baseAddress)
+    {
+        pointerSize = 8;
+        Span<byte> lfanew = stackalloc byte[4];
+        if(!reader!.TryRead(baseAddress + 0x3C, lfanew))
+            return;
+        var peOffset = BitConverter.ToInt32(lfanew);
+        Span<byte> machine = stackalloc byte[2];
+        if(!reader.TryRead(baseAddress + peOffset + 4, machine))
+            return;
+        var machineType = BitConverter.ToUInt16(machine);
+        pointerSize = machineType is 0x014C or 0x01C4 ? 4 : 8;
+        DebugLog.SharedInstance.Write($"External autosplitter: {exeName} machine=0x{machineType:X4} ({(pointerSize == 4 ? "32" : "64")}-bit pointers)");
     }
 
     void IScriptHost.Split()
@@ -264,6 +289,8 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
     private string? pendingScript;
     private TimeSpan time;
     private int pid = -1;
+    private int pointerSize = 8;
+    private bool pointerSizeDetected;
     private bool isLoading;
     private bool scriptStarted;
     private bool closing;
