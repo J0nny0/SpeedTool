@@ -9,8 +9,9 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
     {
         exeName = lookForExe;
         InjectedExeName = lookForExe;
-        DebugLog.SharedInstance.Write($"External autosplitter: watching for {lookForExe}");
+        DebugLog.SharedInstance.Write($"External autosplitter: watching for {lookForExe} (speedtool pid {Environment.ProcessId})");
         workerThread = new Thread(Worker);
+        workerThread.IsBackground = true;
         workerThread.Start();
     }
 
@@ -130,8 +131,10 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
             if((DateTime.UtcNow - lastHeartbeat).TotalSeconds >= HEARTBEAT_SECONDS)
             {
                 lastHeartbeat = DateTime.UtcNow;
-                DebugLog.SharedInstance.Write($"External autosplitter: heartbeat pid={pid} loading={isLoading} " +
-                                              $"scriptStarted={scriptStarted} time={time}");
+                var failures = reader?.FailedReads ?? 0;
+                var lastFail = reader?.LastFailedAddress ?? 0;
+                DebugLog.SharedInstance.Write($"External autosplitter: heartbeat speedtoolPid={Environment.ProcessId} pid={pid} loading={isLoading} " +
+                                              $"scriptStarted={scriptStarted} time={time} readFailures={failures} lastFail=0x{lastFail:X}");
             }
 
             Thread.Sleep(FRAME_PACING_MS);
@@ -162,7 +165,7 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
                 CreateEngine();
             }
             IsHooked = true;
-            DebugLog.SharedInstance.Write($"External autosplitter: attached to {exeName} (pid {found})");
+            DebugLog.SharedInstance.Write($"External autosplitter: attached to {exeName} (pid {found}, speedtool pid {Environment.ProcessId})");
         }
         catch(Exception ex)
         {
