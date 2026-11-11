@@ -12,6 +12,8 @@ internal interface IScriptHost
 
     long GetModuleBase(string name);
 
+    int PointerSize { get; }
+
     void Split();
 
     void StartTimer();
@@ -174,11 +176,19 @@ internal sealed class ExternalScriptEngine : IDisposable
             .Select(entry => entry.value)
             .ToArray();
 
-        long begin = ReadInt64(path[0]);
+        long begin = ReadPointer(path[0]);
         for(int i = 1; i < path.Length - 1; i++)
-            begin = ReadInt64(begin + path[i]);
+            begin = ReadPointer(begin + path[i]);
 
         return begin + path[^1];
+    }
+
+    private long ReadPointer(long address)
+    {
+        Span<byte> buffer = stackalloc byte[8];
+        if(!host.TryRead(address, buffer[..host.PointerSize]))
+            return 0;
+        return host.PointerSize == 4 ? BitConverter.ToUInt32(buffer) : BitConverter.ToInt64(buffer);
     }
 
     private readonly IScriptHost host;
