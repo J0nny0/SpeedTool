@@ -1,11 +1,12 @@
-SpeedTool Wayland diagnostic build (x86_64)
-Built from: J0nny0/SpeedTool branch vibe/wayland-support-5f26ae @ f9c59a6
+SpeedTool Wayland build (x86_64) - WORKING, diagnostics removed
+Built from: J0nny0/SpeedTool branch vibe/wayland-support-5f26ae @ 3afcfde
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
 
-This build adds:
-- Window created at its final size from the start (candidate fix for blank UI on Wayland)
-- A white test square in the top-left corner of the window
-- Per-frame diagnostics in ~/.local/share/speedtool/debug.log (also printed to console):
-  "Frame N: windowSize=... fb=... displaySize=... cmdLists=... vtx=... idx=... texID=... glErr=..."
-  "GL: vendor=... renderer=... version=..."
+Fix: the window is now created at its final size from the start, which repairs
+the blank UI (rings but no text) on Wayland. Diagnostic white square and
+per-frame logging have been removed.
+
+Hotkeys on Wayland use the evdev backend; your user needs to be in the
+"input" group: sudo usermod -aG input $USER (then log out and back in).
+Logs: ~/.local/share/speedtool/debug.log
