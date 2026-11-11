@@ -1,14 +1,15 @@
 SpeedTool Wayland + Linux autosplitter build (x86_64)
-Built from: J0nny0/SpeedTool main @ c56d0f7 (vibe/wayland-support-5f26ae @ 4cfca86)
+Built from: J0nny0/SpeedTool main @ a421507 (vibe/wayland-support-5f26ae @ 7c2f228)
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
 
 New in this build:
-- System clipboard support: copy/paste (Ctrl+C/Ctrl+V/Ctrl+X) now works in the
-  script editor and all text fields, including pasting scripts from a browser.
-  Previously paste silently did nothing.
-- Fixed a code editor bug that duplicated text when pasting multi-line
-  scripts in the middle of a line.
+- Autosplitter diagnostics: the debug log now records script timer calls
+  (timer_start / timer_split), loading-state transitions and a heartbeat
+  every 10s with the current loading/started/time state. Use this to see
+  whether a loadless script actually fires.
+- System clipboard support (copy/paste works everywhere, incl. Wayland).
+- Fixed multi-line paste duplicating text in the script editor.
 - Fixed crash when editing a game's script while the game is hooked.
 - External Lua autosplitter on Linux: loadless timing for Proton/Wine games
   without injection. If attaching fails, run:
