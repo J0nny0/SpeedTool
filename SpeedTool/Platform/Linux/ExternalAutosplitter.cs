@@ -9,7 +9,7 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
     {
         exeName = lookForExe;
         InjectedExeName = lookForExe;
-        DebugLog.SharedInstance.Write($"External autosplitter: watching for {lookForExe} (speedtool pid {Environment.ProcessId})");
+        DebugLog.SharedInstance.Write($"External autosplitter: watching for {lookForExe}");
         workerThread = new Thread(Worker);
         workerThread.IsBackground = true;
         workerThread.Start();
@@ -128,15 +128,6 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
                 DebugLog.SharedInstance.Write("External autosplitter: script error: " + ex.Message);
             }
 
-            if((DateTime.UtcNow - lastHeartbeat).TotalSeconds >= HEARTBEAT_SECONDS)
-            {
-                lastHeartbeat = DateTime.UtcNow;
-                var failures = reader?.FailedReads ?? 0;
-                var lastFail = reader?.LastFailedAddress ?? 0;
-                DebugLog.SharedInstance.Write($"External autosplitter: heartbeat speedtoolPid={Environment.ProcessId} pid={pid} loading={isLoading} " +
-                                              $"scriptStarted={scriptStarted} time={time} readFailures={failures} lastFail=0x{lastFail:X}");
-            }
-
             Thread.Sleep(FRAME_PACING_MS);
         }
     }
@@ -154,7 +145,6 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
         {
             reader = new ProcessMemoryReader(found);
             pid = found;
-            LogAttachInfo(found);
             lock(sync)
             {
                 if(pendingScript != null)
@@ -165,7 +155,7 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
                 CreateEngine();
             }
             IsHooked = true;
-            DebugLog.SharedInstance.Write($"External autosplitter: attached to {exeName} (pid {found}, speedtool pid {Environment.ProcessId})");
+            DebugLog.SharedInstance.Write($"External autosplitter: attached to {exeName} (pid {found})");
         }
         catch(Exception ex)
         {
@@ -190,22 +180,6 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
         pointerSize = 8;
         pointerSizeDetected = false;
         IsHooked = false;
-    }
-
-    private void LogAttachInfo(int found)
-    {
-        try
-        {
-            var baseAddress = ProcMaps.GetModuleBase(found, exeName);
-            Span<byte> magic = stackalloc byte[2];
-            var magicRead = reader!.TryRead(baseAddress, magic);
-            var magicText = magicRead ? $"{(char)magic[0]}{(char)magic[1]}" : "unreadable";
-            DebugLog.SharedInstance.Write($"External autosplitter: {exeName} base=0x{baseAddress:X} magic={magicText}");
-        }
-        catch(Exception ex)
-        {
-            DebugLog.SharedInstance.Write($"External autosplitter: attach info failed: {ex.Message}");
-        }
     }
 
     private void CreateEngine()
@@ -276,7 +250,6 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
     }
 
     private const int FRAME_PACING_MS = 4;
-    private const int HEARTBEAT_SECONDS = 10;
 
     private readonly object sync = new();
     private readonly string exeName;
@@ -294,5 +267,4 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
     private bool isLoading;
     private bool scriptStarted;
     private bool closing;
-    private DateTime lastHeartbeat = DateTime.MinValue;
 }
