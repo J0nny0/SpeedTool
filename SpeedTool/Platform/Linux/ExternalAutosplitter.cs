@@ -127,6 +127,13 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
                 DebugLog.SharedInstance.Write("External autosplitter: script error: " + ex.Message);
             }
 
+            if((DateTime.UtcNow - lastHeartbeat).TotalSeconds >= HEARTBEAT_SECONDS)
+            {
+                lastHeartbeat = DateTime.UtcNow;
+                DebugLog.SharedInstance.Write($"External autosplitter: heartbeat pid={pid} loading={isLoading} " +
+                                              $"scriptStarted={scriptStarted} time={time}");
+            }
+
             Thread.Sleep(FRAME_PACING_MS);
         }
     }
@@ -229,6 +236,7 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
 
     void IScriptHost.StartTimer()
     {
+        DebugLog.SharedInstance.Write($"External autosplitter: script requested timer start (run already started: {Platform.SharedPlatform.IsRunStarted})");
         if(!Platform.SharedPlatform.IsRunStarted)
             Platform.SharedPlatform.Split();
         scriptStarted = true;
@@ -240,6 +248,7 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
     }
 
     private const int FRAME_PACING_MS = 4;
+    private const int HEARTBEAT_SECONDS = 10;
 
     private readonly object sync = new();
     private readonly string exeName;
@@ -255,4 +264,5 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
     private bool isLoading;
     private bool scriptStarted;
     private bool closing;
+    private DateTime lastHeartbeat = DateTime.MinValue;
 }
