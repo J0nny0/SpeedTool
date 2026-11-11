@@ -47,6 +47,9 @@ internal sealed class ExternalScriptEngine : IDisposable
 
         luaState["__script"] = script;
         luaState.DoString(LOADER);
+
+        DebugLog.SharedInstance.Write($"External autosplitter: script loaded ({script.Length} chars, " +
+                                      $"on_load={luaState["sandbox_env.on_load"] != null}, on_frame={luaState["sandbox_env.on_frame"] != null})");
     }
 
     public void OnFrame()
