@@ -28,6 +28,7 @@ internal sealed class ExternalScriptEngine : IDisposable
         luaState.DoString(SANDBOX);
 
         Register("module_base_address", (Func<string, long>)(name => host.GetModuleBase(name)));
+        Register("__report_error", (Action<string>)ReportError);
         Register("debug_message", (Action<string>)(message => DebugLog.SharedInstance.Write("Script: " + message)));
         Register("debug_message_address", (Action<long>)(address => DebugLog.SharedInstance.Write($"Script: 0x{address:X16}")));
         Register("timer_set_loading", (Action)(() => host.SetLoading(true)));
@@ -61,6 +62,14 @@ internal sealed class ExternalScriptEngine : IDisposable
     public void Dispose()
     {
         luaState.Dispose();
+    }
+
+    private void ReportError(string message)
+    {
+        if(message == lastError)
+            return;
+        lastError = message;
+        DebugLog.SharedInstance.Write("External autosplitter: script error: " + message);
     }
 
     private void Register(string name, Delegate function)
@@ -192,7 +201,10 @@ function run_sandbox(sb_env, sb_func, ...)
   _ENV=sb_env
   local sb_ret={e.pcall(sb_func, ...)}
   _ENV=sb_orig_env
+  if (not sb_ret[1]) then e.__report_error(e.tostring(sb_ret[2])) end
   return e.table.unpack(sb_ret)
 end
 """;
+
+    private string? lastError;
 }
