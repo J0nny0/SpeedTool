@@ -31,7 +31,7 @@ internal sealed class ExternalScriptEngine : IDisposable
 
         Register("module_base_address", (Func<string, long>)(name => host.GetModuleBase(name)));
         Register("__report_error", (Action<string>)ReportError);
-        Register("debug_message", (Action<string>)(message => LogCapped(message, DEBUG_MESSAGE_CAP, "")));
+        Register("debug_message", (Action<string>)(message => DebugLog.SharedInstance.Write("Script: " + message)));
         Register("debug_message_address", (Action<long>)(address => DebugLog.SharedInstance.Write($"Script: 0x{address:X16}")));
         Register("timer_set_loading", (Action)(() => HostSetLoading(true)));
         Register("timer_set_not_loading", (Action)(() => HostSetLoading(false)));
@@ -71,39 +71,17 @@ internal sealed class ExternalScriptEngine : IDisposable
 
     private void HostSetLoading(bool loading)
     {
-        if(loading != lastLoading)
-        {
-            lastLoading = loading;
-            DebugLog.SharedInstance.Write($"Script: loading state -> {(loading ? "loading" : "not loading")}");
-        }
         host.SetLoading(loading);
     }
 
     private void HostSplit()
     {
-        LogCapped("timer_split called", LOG_CAP, "Script: ");
         host.Split();
     }
 
     private void HostStart()
     {
-        LogCapped("timer_start called", LOG_CAP, "Script: ");
         host.StartTimer();
-    }
-
-    private void LogCapped(string message)
-    {
-        LogCapped(message, LOG_CAP, "");
-    }
-
-    private void LogCapped(string message, int cap, string prefix)
-    {
-        var count = logCounts.GetValueOrDefault(message, 0);
-        if(count >= cap)
-            return;
-        logCounts[message] = count + 1;
-        DebugLog.SharedInstance.Write(prefix + message +
-                                      (count == cap - 1 ? " (further identical messages suppressed)" : ""));
     }
 
     private void ReportError(string message)
@@ -257,10 +235,4 @@ end
 """;
 
     private string? lastError;
-    private bool lastLoading;
-    private readonly Dictionary<string, int> logCounts = new();
-
-    private const int LOG_CAP = 5;
-
-    private const int DEBUG_MESSAGE_CAP = 1;
 }
