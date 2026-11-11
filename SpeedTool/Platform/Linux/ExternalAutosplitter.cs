@@ -40,9 +40,7 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
     {
         lock(sync)
         {
-            this.script = script;
-            if(IsHooked)
-                CreateEngine();
+            pendingScript = script;
         }
     }
 
@@ -108,6 +106,13 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
             {
                 lock(sync)
                 {
+                    if(pendingScript != null)
+                    {
+                        script = pendingScript;
+                        pendingScript = null;
+                        CreateEngine();
+                    }
+
                     engine?.OnFrame();
                     if(gameTimer != null)
                     {
@@ -141,7 +146,14 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
             pid = found;
             LogAttachInfo(found);
             lock(sync)
+            {
+                if(pendingScript != null)
+                {
+                    script = pendingScript;
+                    pendingScript = null;
+                }
                 CreateEngine();
+            }
             IsHooked = true;
             DebugLog.SharedInstance.Write($"External autosplitter: attached to {exeName} (pid {found})");
         }
@@ -237,6 +249,7 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
     private ExternalScriptEngine? engine;
     private GameTimeAccumulator? gameTimer;
     private string? script;
+    private string? pendingScript;
     private TimeSpan time;
     private int pid = -1;
     private bool isLoading;
