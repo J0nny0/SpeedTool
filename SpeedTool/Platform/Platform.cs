@@ -297,6 +297,7 @@ public sealed class Platform
         {
             injector?.Dispose();
             injector = game.ExeName == "" ? null : new ExternalAutosplitter(game.ExeName);
+            injector?.ReloadScript(game.Script);
             sources[(int)TimingMethod.Loadless] = injector == null ? new NoTimer() : injector;
             return;
         }
