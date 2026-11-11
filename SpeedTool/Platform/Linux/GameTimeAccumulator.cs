@@ -1,0 +1,49 @@
+using System.Diagnostics;
+
+namespace SpeedTool.Platform.Linux;
+
+internal sealed class GameTimeAccumulator
+{
+    public void Start()
+    {
+        sw = new Stopwatch();
+        sw.Start();
+    }
+
+    public void Cycle(bool loading)
+    {
+        var time = sw.Elapsed;
+        if(loading)
+        {
+            if(!lastFrameLoading)
+            {
+                accumulatedValue += time;
+                value = accumulatedValue;
+            }
+
+            Start();
+            lastFrameLoading = true;
+            return;
+        }
+
+        lastFrameLoading = false;
+
+        value = accumulatedValue + sw.Elapsed;
+    }
+
+    public TimeSpan Value
+    {
+        get
+        {
+            return value;
+        }
+    }
+
+    private TimeSpan value;
+
+    private TimeSpan accumulatedValue;
+
+    private Stopwatch sw = null!;
+
+    private bool lastFrameLoading = false;
+}

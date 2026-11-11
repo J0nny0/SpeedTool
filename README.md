@@ -71,6 +71,24 @@ When unset, SpeedTool picks evdev automatically on Wayland sessions.
 
 The active backend is written to the debug log on startup.
 
+### Autosplitters under Proton / Wine
+
+On Linux, SpeedTool does not inject anything into the game. Instead it runs the game's Lua script
+externally: it finds the game process, reads its memory through `/proc/<pid>/mem` and resolves
+`module_base_address` from `/proc/<pid>/maps`. The script API (`read_int`, `read_ascii`, `pointer_path`,
+`timer_split`, `timer_set_loading`, ...) is the same as on Windows, so the same `.stg` game files work.
+
+Reading another process' memory is restricted by the kernel (`kernel.yama.ptrace_scope`). If attaching
+fails, allow it with:
+
+```
+sudo sysctl kernel.yama.ptrace_scope=0
+```
+
+Game time is accumulated externally: the script reports loading states with `timer_set_loading` /
+`timer_set_not_loading`, and the timer only advances while the game is not loading. `on_frame` is polled
+at a fixed rate instead of being driven by a present hook.
+
 ## Future plans
 
 Some things we'd like to work on in the near future:
