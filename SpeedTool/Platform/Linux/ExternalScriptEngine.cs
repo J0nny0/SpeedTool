@@ -31,10 +31,10 @@ internal sealed class ExternalScriptEngine : IDisposable
         Register("__report_error", (Action<string>)ReportError);
         Register("debug_message", (Action<string>)(message => DebugLog.SharedInstance.Write("Script: " + message)));
         Register("debug_message_address", (Action<long>)(address => DebugLog.SharedInstance.Write($"Script: 0x{address:X16}")));
-        Register("timer_set_loading", (Action)(() => host.SetLoading(true)));
-        Register("timer_set_not_loading", (Action)(() => host.SetLoading(false)));
-        Register("timer_split", (Action)(() => host.Split()));
-        Register("timer_start", (Action)(() => host.StartTimer()));
+        Register("timer_set_loading", (Action)(() => HostSetLoading(true)));
+        Register("timer_set_not_loading", (Action)(() => HostSetLoading(false)));
+        Register("timer_split", (Action)(() => HostSplit()));
+        Register("timer_start", (Action)(() => HostStart()));
         Register("read_int", (Func<long, int>)ReadInt32);
         Register("read_long", (Func<long, long>)ReadInt64);
         Register("read_float", (Func<long, float>)ReadFloat);
@@ -65,6 +65,38 @@ internal sealed class ExternalScriptEngine : IDisposable
     public void Dispose()
     {
         luaState.Dispose();
+    }
+
+    private void HostSetLoading(bool loading)
+    {
+        if(loading != lastLoading)
+        {
+            lastLoading = loading;
+            DebugLog.SharedInstance.Write($"Script: loading state -> {(loading ? "loading" : "not loading")}");
+        }
+        host.SetLoading(loading);
+    }
+
+    private void HostSplit()
+    {
+        LogCapped("timer_split called");
+        host.Split();
+    }
+
+    private void HostStart()
+    {
+        LogCapped("timer_start called");
+        host.StartTimer();
+    }
+
+    private void LogCapped(string message)
+    {
+        var count = logCounts.GetValueOrDefault(message, 0);
+        if(count >= LOG_CAP)
+            return;
+        logCounts[message] = count + 1;
+        DebugLog.SharedInstance.Write("Script: " + message +
+                                      (count == LOG_CAP - 1 ? " (further identical messages suppressed)" : ""));
     }
 
     private void ReportError(string message)
@@ -210,4 +242,8 @@ end
 """;
 
     private string? lastError;
+    private bool lastLoading;
+    private readonly Dictionary<string, int> logCounts = new();
+
+    private const int LOG_CAP = 5;
 }
