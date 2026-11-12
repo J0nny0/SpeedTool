@@ -249,7 +249,7 @@ public sealed class ExternalAutosplitter : IAutosplitter, IScriptHost
         isLoading = loading;
     }
 
-    private const int FRAME_PACING_MS = 4;
+    private const int FRAME_PACING_MS = 2;
 
     private readonly object sync = new();
     private readonly string exeName;
