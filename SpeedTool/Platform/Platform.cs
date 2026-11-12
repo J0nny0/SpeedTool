@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Silk.NET.Input.Glfw;
@@ -172,6 +173,16 @@ public sealed class Platform
         gameWatcher.Register(path);
     }
 
+    public string? FindKnownGameFile(string exeName)
+    {
+        return gameWatcher.FindGameFileForExe(exeName);
+    }
+
+    public void IgnoreGameExe(string exeName)
+    {
+        gameWatcher.Ignore(exeName);
+    }
+
     public void UnloadGame()
     {
         if(Game is null)
@@ -186,8 +197,11 @@ public sealed class Platform
 
     public void Run()
     {
-        while (windows.Count != 0)
+        while (windows.Count != 0 || !pendingWindows.IsEmpty)
         {
+            while(pendingWindows.TryDequeue(out var pending))
+                windows.Add(pending);
+
             for(int i = 0; i < windows.Count; i++)
             {
                 windows[i].Cycle();
@@ -242,7 +256,7 @@ public sealed class Platform
 
     public void AddWindow(Window w)
     {
-        windows.Add(w);
+        pendingWindows.Enqueue(w);
     }
 
     private Platform()
@@ -331,6 +345,8 @@ public sealed class Platform
     HotkeyController hotkeyController;
 
     GameWatcher gameWatcher;
+
+    ConcurrentQueue<Window> pendingWindows = new();
 
     NullSplitsSource nullSplits = new();
 

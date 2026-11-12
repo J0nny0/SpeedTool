@@ -38,6 +38,15 @@ public sealed class GameWatcherTests
     }
 
     [Fact]
+    public void RunningProcessListIsDistinctSortedAndExcludesSelf()
+    {
+        var names = SpeedTool.Platform.ProcessList.GetRunningExeNames();
+        Assert.Equal(names.Length, names.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        Assert.DoesNotContain("SpeedTool", names);
+        Assert.Equal(names, names.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToArray());
+    }
+
+    [Fact]
     public void GameWatcherSettingsRoundTrip()
     {
         var settings = new GameWatcherSettings

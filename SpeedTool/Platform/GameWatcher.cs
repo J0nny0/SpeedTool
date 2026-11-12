@@ -7,6 +7,7 @@ using SpeedTool.Platform.Debugging;
 using SpeedTool.Platform.Linux;
 using SpeedTool.Splits;
 using SpeedTool.Util;
+using SpeedTool.Windows;
 
 namespace SpeedTool.Platform;
 
@@ -44,6 +45,28 @@ internal sealed class GameWatcher
            candidatePid == lastLoadedPid)
             return false;
         return true;
+    }
+
+    public string? FindGameFileForExe(string exeName)
+    {
+        lock(sync)
+        {
+            foreach(var path in settings.KnownGames)
+            {
+                if(GetExeName(path).Equals(exeName, StringComparison.OrdinalIgnoreCase))
+                    return path;
+            }
+        }
+        return null;
+    }
+
+    public void Ignore(string exeName)
+    {
+        lock(sync)
+        {
+            ignored.Add(exeName);
+        }
+        DebugLog.SharedInstance.Write($"GameWatcher: ignoring {exeName}");
     }
 
     private void OnConfigChanged(object? sender, IConfigurationSection section)
@@ -104,6 +127,35 @@ internal sealed class GameWatcher
                 return;
             }
         }
+
+        PromptForUnknownGames();
+    }
+
+    private void PromptForUnknownGames()
+    {
+        HashSet<string> known;
+        lock(sync)
+        {
+            known = settings.KnownGames
+                .Select(path => GetExeName(path))
+                .Where(n => n != "")
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
+
+        foreach(var exe in ProcessList.GetRunningExeNames())
+        {
+            if(!exe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                continue;
+            lock(sync)
+            {
+                if(known.Contains(exe) || ignored.Contains(exe) || prompted.Contains(exe))
+                    continue;
+                prompted.Add(exe);
+            }
+            DebugLog.SharedInstance.Write($"GameWatcher: unknown game {exe} is running");
+            Platform.SharedPlatform.AddWindow(new ProcessPickerWindow(exe));
+            return;
+        }
     }
 
     private string GetExeName(string path)
@@ -155,6 +207,8 @@ internal sealed class GameWatcher
     private GameWatcherSettings settings;
     private string? lastLoadedExe;
     private int lastLoadedPid = -1;
+    private readonly HashSet<string> ignored = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> prompted = new(StringComparer.OrdinalIgnoreCase);
 
     private const int POLL_PERIOD_MS = 1000;
 }

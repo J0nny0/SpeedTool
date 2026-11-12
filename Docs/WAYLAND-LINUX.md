@@ -165,9 +165,27 @@ confirmation (`N chars, on_load=True, on_frame=True`), script errors, and the
 ptrace hint on failure. For verbose diagnostics use the `debug-diagnostics`
 branch.
 
+## 8. Automatic game loading
+
+`SpeedTool/Platform/GameWatcher.cs` adds optional auto-loading of game profiles:
+
+- Every game profile loaded from a file (drag & drop, file dialog, save from
+  the editor) is remembered in `GameWatcherSettings.KnownGames`.
+- When enabled, a background watcher checks once per second whether a known
+  game's exe is running and, if so, loads its profile automatically.
+- Policy: only when no game is loaded; a game the user explicitly unloaded
+  stays unloaded until its process exits and a **new** instance starts (the
+  watcher tracks the process id, so a relaunch re-arms the timer).
+- Toggle: right-click menu → *Auto-load game on launch* (persisted in the
+  configuration).
+
+On Linux this reuses the same `/proc` process scan as the external
+autosplitter (`LinuxProcesses.FindByExeName`), so Proton games are detected
+reliably; on Windows it uses `Process.GetProcessesByName`.
+
 ---
 
-## 8. Known differences / notes for review
+## 9. Known differences / notes for review
 
 - **Lua sandbox:** upstream's `run_sandbox` helper sets `_ENV` only *inside*
   the helper, so scripts loaded by the injected Windows engine actually run

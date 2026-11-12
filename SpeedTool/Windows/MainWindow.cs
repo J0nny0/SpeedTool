@@ -98,6 +98,10 @@ class MainWindow : SPWindow
                 onExit = () => platform.AddWindow(platform.Game == null ? new GameEditorWindow() :
                                                                           new GameEditorWindow(platform.Game));
             }
+            if(ImGui.MenuItem("Attach to process..."))
+            {
+                onExit = () => platform.AddWindow(new ProcessPickerWindow());
+            }
             if(platform.Game != null)
             {
                 if(ImGui.MenuItem("Next Category"))
