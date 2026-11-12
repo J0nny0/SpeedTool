@@ -11,7 +11,18 @@ public sealed class InjectorHandler : IAutosplitter
     {
         exeName = lookForExe.Replace(".exe", "");
         InjectedExeName = lookForExe;
+        useTcp = Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") != null;
         DebugLog.SharedInstance.Write($"Attempting to inject timer into {lookForExe}");
+        if(useTcp)
+        {
+            DebugLog.SharedInstance.Write($"TCP transport enabled: waiting for an externally injected timer " +
+                                          $"(run TimerInjector.exe inside the Wine prefix)");
+            IsHooked = true;
+            ConnectToPipe();
+            workerThread = new Thread(Worker);
+            workerThread.Start();
+            return;
+        }
         if(File.Exists(@"\\.\pipe\SpeedToolPipe"))
         {
             DebugLog.SharedInstance.Write($"Already injected, reconnecting");
@@ -66,6 +77,18 @@ public sealed class InjectorHandler : IAutosplitter
     {
         while(!IsClosing)
         {
+            if(useTcp)
+            {
+                Thread.Sleep(50);
+                if(p != null && !p.IsOpened)
+                {
+                    DebugLog.SharedInstance.Write("Pipe connection lost! Waiting for re-injection");
+                    DisconnectPipe();
+                    Thread.Sleep(500);
+                    ConnectToPipe();
+                }
+                continue;
+            }
             if(IsHooked)
             {
                 Thread.Sleep(50);
@@ -237,6 +260,7 @@ public sealed class InjectorHandler : IAutosplitter
     Thread workerThread;
     Process? loadedProcess;
     private string exeName;
+    private readonly bool useTcp;
 
     bool started = false;
 

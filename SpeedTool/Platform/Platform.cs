@@ -296,7 +296,13 @@ public sealed class Platform
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             injector?.Dispose();
-            injector = game.ExeName == "" ? null : new ExternalAutosplitter(game.ExeName);
+            if(Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") != null && game.ExeName != "")
+            {
+                DebugLog.SharedInstance.Write("Injection experiment enabled (SPEEDTOOL_TCP_PORT is set)");
+                injector = new InjectorHandler(game.ExeName);
+            }
+            else
+                injector = game.ExeName == "" ? null : new ExternalAutosplitter(game.ExeName);
             injector?.ReloadScript(game.Script);
             sources[(int)TimingMethod.Loadless] = injector == null ? new NoTimer() : injector;
             return;

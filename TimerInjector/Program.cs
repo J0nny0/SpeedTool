@@ -8,10 +8,24 @@ class Program
     static int Main(string[] args)
     {
         if(args.Length != 1)
+        {
+            Console.WriteLine("Usage: TimerInjector.exe <pid | process name>");
             return 1;
+        }
         int targetPID = 0;
         if(!int.TryParse(args[0], out targetPID))
-            return 1;
+        {
+            var name = args[0];
+            if(name.ToLower().EndsWith(".exe"))
+                name = name.Substring(0, name.Length - 4);
+            var procs = System.Diagnostics.Process.GetProcessesByName(name);
+            if(procs.Length == 0)
+            {
+                Console.WriteLine("Process not found: " + args[0]);
+                return 2;
+            }
+            targetPID = procs[0].Id;
+        }
 
         if (targetPID <= 0)
             return 1;
@@ -21,12 +35,17 @@ class Program
 
         try
         {
+            // TCP transport is enabled by setting SPEEDTOOL_TCP_PORT for the injector;
+            // an empty value keeps the default named pipe transport.
+            var tcpPort = Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") ?? "";
+
             // inject into existing process
             RemoteHooking.Inject(
                 targetPID,          // ID of process to inject into
                 injectionLibrary,   // 32-bit library to inject (if target is 32-bit)
                 injectionLibrary,   // 64-bit library to inject (if target is 64-bit)
-                ""                  // the parameters to pass into injected library
+                    "",             // the parameters to pass into injected library
+                tcpPort
             );
         }
         catch (Exception e)

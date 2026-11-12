@@ -2,16 +2,16 @@
 namespace SpeedTool.Injector;
 
 using System.Collections.Concurrent;
-using System.IO.Pipes;
+using System.IO;
 
 /// <summary>
-/// Helper reader to asynchronously read from pipe
+/// Helper reader to asynchronously read from a stream
 /// </summary>
 public sealed class PipeReader : IDisposable
 {
-    public PipeReader(PipeStream pipe)
+    public PipeReader(Stream stream)
     {
-        sr = new StreamReader(pipe);
+        sr = new StreamReader(stream);
         workerThread = new Thread(Worker);
         workerThread.Start();
     }

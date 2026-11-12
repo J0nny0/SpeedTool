@@ -2,22 +2,50 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.IO.Pipes;
+using System.Net.Sockets;
+using System.Threading;
 
 namespace InjectedTimer
 {
     public sealed class Pipe : IDisposable
     {
-        public Pipe()
+        public Pipe(string tcpPort)
         {
-            server = new NamedPipeServerStream("SpeedToolPipe", PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-
             toSend = new ConcurrentQueue<string>();
+
+            if(tcpPort != null && tcpPort != "")
+            {
+                ConnectTcp(int.Parse(tcpPort));
+                return;
+            }
+
+            server = new NamedPipeServerStream("SpeedToolPipe", PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
 
             server.WaitForConnection();
             connected = true;
             pipeWriter = new StreamWriter(server);
             pipeReader = new PipeReader(server);
             Console.Error.WriteLine("Test");
+        }
+
+        private void ConnectTcp(int port)
+        {
+            tcpClient = new TcpClient();
+            while(true)
+            {
+                try
+                {
+                    tcpClient.Connect("127.0.0.1", port);
+                    break;
+                }
+                catch
+                {
+                    Thread.Sleep(500);
+                }
+            }
+            connected = true;
+            pipeWriter = new StreamWriter(tcpClient.GetStream());
+            pipeReader = new PipeReader(tcpClient.GetStream());
         }
 
         public event EventHandler<string> OnIncomingCmd;
@@ -34,15 +62,20 @@ namespace InjectedTimer
         {
             get
             {
-                if(connected)
-                    return server.IsConnected;
-                return true;
+                if(!connected)
+                    return true;
+                if(tcpClient != null)
+                    return tcpClient.Connected;
+                return server.IsConnected;
             }
         }
 
         public void Dispose()
         {
-            server.Dispose();
+            if(tcpClient != null)
+                tcpClient.Dispose();
+            else
+                server.Dispose();
         }
 
         public void SendString(string str)
@@ -53,7 +86,7 @@ namespace InjectedTimer
 
         public void Cycle()
         {
-            if(!server.IsConnected)
+            if(tcpClient != null ? !tcpClient.Connected : !server.IsConnected)
                 return;
 
             while(!toSend.IsEmpty)
@@ -90,5 +123,6 @@ namespace InjectedTimer
         private StreamWriter pipeWriter;
         PipeReader pipeReader;
         private NamedPipeServerStream server;
+        private TcpClient tcpClient;
     }
 }

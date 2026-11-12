@@ -93,6 +93,7 @@ at a fixed rate instead of being driven by a present hook.
 
 * [`Docs/SCRIPTING.md`](Docs/SCRIPTING.md) — scripting overview: API reference, pointer paths, examples
 * [`Docs/WAYLAND-LINUX.md`](Docs/WAYLAND-LINUX.md) — all Linux/Wayland changes in this fork and how the external autosplitter works
+* [`Docs/WINE-INJECTION.md`](Docs/WINE-INJECTION.md) — experimental: reach the Windows injection stack from Linux over TCP (`wine-dist/` has the compiled injector)
 * [`Docs/Examples/`](Docs/Examples) — the default script template and a complete NFS: Most Wanted (2012) loadless script
 
 ## Future plans

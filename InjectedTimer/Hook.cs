@@ -26,8 +26,10 @@ namespace Hook
         /// <param name="channelName">The name of the IPC channel</param>
         public InjectionEntryPoint(
             EasyHook.RemoteHooking.IContext context,
-            string channelName)
+            string channelName,
+            string tcpPort)
         {
+            this.tcpPort = tcpPort;
         }
 
         /// <summary>
@@ -39,8 +41,11 @@ namespace Hook
         /// <param name="channelName">The name of the IPC channel</param>
         public void Run(
             EasyHook.RemoteHooking.IContext context,
-            string channelName)
+            string channelName,
+            string tcpPort)
         {
+            if(tcpPort == null)
+                tcpPort = this.tcpPort;
             // Install hooks
 
             // Wake up the process (required if using RemoteHooking.CreateAndInject)
@@ -157,13 +162,14 @@ namespace Hook
                     p.OnIncomingCmd -= OnMsg;
                     p.Dispose();
                 }
-                p = new Pipe();
+                p = new Pipe(tcpPort);
                 p.OnIncomingCmd += OnMsg;
                 while(p.IsOk) await Task.Delay(500);
             }
         }
 
         string script;
+        string tcpPort;
         CancellationTokenSource shutdownToken;
         Pipe p;
         ScriptEngine engine;

@@ -1,4 +1,6 @@
 using System.IO.Pipes;
+using System.Net;
+using System.Net.Sockets;
 using SpeedTool.Platform.Debugging;
 
 namespace SpeedTool.Injector;
@@ -7,6 +9,13 @@ public sealed class Pipe : IDisposable
 {
     public Pipe(string script)
     {
+        var portEnv = Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT");
+        if(portEnv != null)
+        {
+            StartTcpListener(script, int.Parse(portEnv));
+            return;
+        }
+
         client = new NamedPipeClientStream(".", "SpeedToolPipe", PipeDirection.InOut, PipeOptions.Asynchronous);
         connectCancellation = new();
         connectionTask = client.ConnectAsync(connectCancellation.Token);
@@ -15,6 +24,23 @@ public sealed class Pipe : IDisposable
             DebugLog.SharedInstance.Write("Pipe connected");
             pipeReader = new PipeReader(client);
             pipeWriter = new StreamWriter(client);
+            SendScript(script);
+        });
+    }
+
+    private void StartTcpListener(string script, int port)
+    {
+        tcpListener = new TcpListener(IPAddress.Loopback, port);
+        tcpListener.Start();
+        DebugLog.SharedInstance.Write($"Pipe: waiting for injected timer on TCP 127.0.0.1:{port}");
+        tcpListener.AcceptTcpClientAsync().ContinueWith(t =>
+        {
+            if(t.IsFaulted)
+                return;
+            tcpClient = t.Result;
+            DebugLog.SharedInstance.Write("Pipe: injected timer connected over TCP");
+            pipeReader = new PipeReader(tcpClient.GetStream());
+            pipeWriter = new StreamWriter(tcpClient.GetStream());
             SendScript(script);
         });
     }
@@ -28,6 +54,16 @@ public sealed class Pipe : IDisposable
             if(pipeReader == null)
                 return true;
             return pipeReader.IsOK;
+        }
+    }
+
+    public bool IsConnected
+    {
+        get
+        {
+            if(tcpListener != null)
+                return tcpClient != null && tcpClient.Connected && pipeReader != null;
+            return client != null && client.IsConnected;
         }
     }
 
@@ -50,15 +86,17 @@ public sealed class Pipe : IDisposable
 
     public void Dispose()
     {
-        connectCancellation.Cancel();
+        connectCancellation?.Cancel();
         pipeReader?.Dispose();
         //pipeWriter?.Dispose();
-        client.Dispose();
+        tcpClient?.Dispose();
+        tcpListener?.Stop();
+        client?.Dispose();
     }
 
     public void Cycle()
     {
-        if(!client.IsConnected || pipeReader == null)
+        if(!IsConnected || pipeReader == null)
             return;
         while(pipeReader.HasData)
         {
@@ -79,11 +117,14 @@ public sealed class Pipe : IDisposable
     }
 
     Task? connectionTask;
-    CancellationTokenSource connectCancellation;
+    CancellationTokenSource? connectCancellation;
+
+    private TcpListener? tcpListener;
+    private TcpClient? tcpClient;
 
     private PipeReader? pipeReader;
     private StreamWriter? pipeWriter;
-    private NamedPipeClientStream client;
+    private NamedPipeClientStream? client;
 
     private const string TEST_CODE =
     "function on_load()\n" +
