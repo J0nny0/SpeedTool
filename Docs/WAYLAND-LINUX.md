@@ -183,6 +183,24 @@ On Linux this reuses the same `/proc` process scan as the external
 autosplitter (`LinuxProcesses.FindByExeName`), so Proton games are detected
 reliably; on Windows it uses `Process.GetProcessesByName`.
 
+### Attach to process (no profile needed)
+
+The right-click menu has an *Attach to process...* entry that opens a picker
+with a dropdown of all running programs. For a picked process it can:
+
+- **Load profile** — load an existing known profile for that exe.
+- **Create profile** — immediately load a working stub profile (Real Time,
+  one default split) pre-filled with the exe name and open the editor, so
+  the timer is usable right away; saving registers it for future auto-load.
+- **Ignore** — stop suggesting this process for this session.
+
+Useful for games with long exe names (typical Unreal Engine naming like
+`MyGame-Win64-Shipping.exe`): no typing required, pick it from the list.
+
+When auto-load is enabled and an **unknown** `.exe` process starts, the
+picker opens automatically (once per exe per session) — known profiles still
+load silently as before, and ignored processes never prompt.
+
 ---
 
 ## 9. Known differences / notes for review

@@ -26,6 +26,9 @@ public sealed class ProcessPickerWindow : Window
 
     protected override void OnUI(double dt)
     {
+        // Opening windows in between ImGui calls screws up ImGui's stack, so we need to do that on function exit
+        Action? afterUi = null;
+
         var viewport = ImGui.GetMainViewport();
         ImGui.SetNextWindowPos(new Vector2(0, 0));
         ImGui.SetNextWindowSize(viewport.Size);
@@ -58,8 +61,12 @@ public sealed class ProcessPickerWindow : Window
                 var path = platform.FindKnownGameFile(processes[selected]);
                 if(path != null)
                 {
-                    platform.LoadGame(Game.LoadFromFile(path));
-                    Close();
+                    var gamePath = path;
+                    afterUi = () =>
+                    {
+                        platform.LoadGame(Game.LoadFromFile(gamePath));
+                        Close();
+                    };
                 }
                 else
                     noProfile = true;
@@ -72,9 +79,12 @@ public sealed class ProcessPickerWindow : Window
             if(ImGui.Button("Create profile"))
             {
                 var game = CreateStubGame(processes[selected]);
-                platform.LoadGame(game);
-                platform.AddWindow(new GameEditorWindow(game));
-                Close();
+                afterUi = () =>
+                {
+                    platform.LoadGame(game);
+                    platform.AddWindow(new GameEditorWindow(game));
+                    Close();
+                };
             }
             if(ImGui.IsItemHovered())
                 ImGui.SetTooltip("Start a new profile pre-filled with this exe, then edit and save it");
@@ -83,8 +93,12 @@ public sealed class ProcessPickerWindow : Window
 
             if(ImGui.Button("Ignore"))
             {
-                platform.IgnoreGameExe(processes[selected]);
-                Close();
+                var exeName = processes[selected];
+                afterUi = () =>
+                {
+                    platform.IgnoreGameExe(exeName);
+                    Close();
+                };
             }
 
             if(noProfile)
@@ -97,6 +111,8 @@ public sealed class ProcessPickerWindow : Window
 
         ImGui.PopFont();
         ImGui.End();
+
+        afterUi?.Invoke();
     }
 
     private static Game CreateStubGame(string exeName)
