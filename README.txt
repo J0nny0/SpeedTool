@@ -24,3 +24,17 @@ Features in this line:
 - Wayland UI fix, evdev hotkey backend (input group), save-dialog crash fixes.
 
 Logs: ~/.local/share/speedtool/debug.log
+
+## Experiment builds (test branches, not part of main)
+
+- SpeedTool-pacing2ms-x86_64.AppImage — experiment/pacing-2ms @ ba5b9b0:
+  the external autosplitter polls the game at 500 Hz instead of 250 Hz
+  (worst-case transition error ~2 ms instead of ~4 ms). Drop-in replacement,
+  nothing to configure.
+- SpeedTool-injection-x86_64.AppImage — experiment/injection-wine @ 8c389ed:
+  experimental Wine/Proton injection over TCP. Launch with
+  `SPEEDTOOL_TCP_PORT=47774 ./SpeedTool-injection-x86_64.AppImage`, then run
+  the injector from wine-dist/ (on the experiment/injection-wine branch)
+  inside the game's prefix. Full instructions:
+  Docs/WINE-INJECTION.md on that branch. Without the env var this build
+  behaves exactly like the main one.
