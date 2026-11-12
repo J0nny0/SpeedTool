@@ -117,7 +117,11 @@ public sealed class GameEditorWindow : Platform.Window
         ImGui.Separator();
         if(ImGui.Button("Save game"))
         {
-            FileUtil.SaveFile(fileName => CollectGame().SaveToFile(fileName));
+            FileUtil.SaveFile(fileName =>
+            {
+                CollectGame().SaveToFile(fileName);
+                platform.RegisterGameFile(fileName);
+            });
         }
 
         // Temporary stuff to debug this mess. Probably will be removed later

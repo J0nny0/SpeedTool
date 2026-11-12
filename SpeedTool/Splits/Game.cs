@@ -77,10 +77,13 @@ public class Game
     /// </summary>
     public string Script { get; private set; } = "";
 
+    public string SourcePath { get; private set; } = "";
+
     public static Game LoadFromFile(string path)
     {
         Game g = new Game("", []);
         g.source = ZipFile.OpenRead(path);
+        g.SourcePath = path;
 
         EnforceFileExists(g.source, "meta.json");
         var text = g.source.GetEntry("meta.json")!.AsText();

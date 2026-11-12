@@ -153,6 +153,7 @@ public sealed class Platform
     public void LoadGame(Game game)
     {
         DebugLog.SharedInstance.Write($"Loading game {game.Name}");
+        gameWatcher.Register(game.SourcePath);
         this.game = game;
         if(injector != null && injector.InjectedExeName != game.ExeName)
         {
@@ -164,6 +165,11 @@ public sealed class Platform
             injector?.ReloadScript(game.Script);
         }
         ReloadRun();
+    }
+
+    public void RegisterGameFile(string path)
+    {
+        gameWatcher.Register(path);
     }
 
     public void UnloadGame()
@@ -262,6 +268,7 @@ public sealed class Platform
         };
 
         hotkeyController = new();
+        gameWatcher = new GameWatcher();
     }
 
     private void EnsureLocalDir()
@@ -322,6 +329,8 @@ public sealed class Platform
     IAutosplitter? injector;
 
     HotkeyController hotkeyController;
+
+    GameWatcher gameWatcher;
 
     NullSplitsSource nullSplits = new();
 

@@ -6,6 +6,7 @@ using SpeedTool.Splits;
 [JsonSerializable(typeof(ClassicUISettings))]
 [JsonSerializable(typeof(ColorSettings))]
 [JsonSerializable(typeof(GeneralConfiguration))]
+[JsonSerializable(typeof(GameWatcherSettings))]
 [JsonSerializable(typeof(HotkeySettings))]
 [JsonSerializable(typeof(SpeedToolUISettings))]
 [JsonSerializable(typeof(SpeedToolUITheme))]

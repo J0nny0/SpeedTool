@@ -23,6 +23,7 @@ class MainWindow : SPWindow
     {
         platform = Platform.Platform.SharedPlatform;
         drw = new TimerDrawable(Gl);
+        autoLoadGame = Configuration.GetSection<GameWatcherSettings>().AutoLoadGame;
         config = Configuration.GetSection<GeneralConfiguration>();
         colorSettings = Configuration.GetSection<ColorSettings>();
         BackgroundColor = colorSettings.TimerBackground;
@@ -114,6 +115,13 @@ class MainWindow : SPWindow
                         platform.UnloadGame();
                     }
                 }
+            }
+            if(ImGui.MenuItem("Auto-load game on launch", autoLoadGame))
+            {
+                autoLoadGame = !autoLoadGame;
+                var watcherSettings = Configuration.GetSection<GameWatcherSettings>();
+                watcherSettings.AutoLoadGame = autoLoadGame;
+                Configuration.SetSection(watcherSettings);
             }
             ImGui.Separator();
             if(ImGui.MenuItem("Split"))
@@ -259,6 +267,8 @@ class MainWindow : SPWindow
     string errorMessage = "";
     TimerDrawable drw;
     private GeneralConfiguration config;
+
+    private bool autoLoadGame;
     private ColorSettings colorSettings;
     Platform.Platform platform;
 
