@@ -1,9 +1,17 @@
 SpeedTool Wayland + Linux autosplitter build (x86_64)
-Built from: vibe/wayland-support-5f26ae @ e41ba17 (NOT merged to main yet)
+Built from: vibe/wayland-support-5f26ae @ 1589a35 (NOT merged to main yet)
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
 
 New in this build:
+- Attach to process: right-click menu -> 'Attach to process...' opens a
+  dropdown of all running programs. Load an existing profile for it, or
+  create a working stub profile pre-filled with the exe name (timer is live
+  immediately, editor opens for script/splits). No typing of long Unreal
+  Engine exe names required.
+- With auto-load enabled, an unknown .exe process starting now opens the
+  picker automatically (once per exe per session). Known profiles still
+  load silently as before; 'Ignore' silences a process for the session.
 - Automatic game loading: enable 'Auto-load game on launch' in the
   right-click menu; SpeedTool then loads a known game's profile
   automatically when its exe starts (works with Proton games). Every game
