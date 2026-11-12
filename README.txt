@@ -1,9 +1,13 @@
 SpeedTool Wayland + Linux autosplitter build (x86_64)
-Built from: J0nny0/SpeedTool main @ 2361866 (vibe/wayland-support-5f26ae @ 89c3287)
+Built from: vibe/wayland-support-5f26ae @ e41ba17 (NOT merged to main yet)
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
 
 New in this build:
+- Automatic game loading: enable 'Auto-load game on launch' in the
+  right-click menu; SpeedTool then loads a known game's profile
+  automatically when its exe starts (works with Proton games). Every game
+  file you load or save is remembered.
 - Diagnostics trimmed for normal use. The log now only contains one-time
   messages per attach (watching/attached, detected game bitness, script
   loaded, script errors, ptrace hint on failure). No more 10s heartbeats
