@@ -116,3 +116,38 @@ Please refer to those for available functionality in the scripting engine.
 | :---     | :---        |
 | debug_message(str) | Sends a debug `str` to main app |
 | debug_message_address(addr) | Sends a debug `addr` to the main app |
+
+## Pointer paths
+
+`pointer_path(addr, offset1, offset2, ...)` unwraps a multi-level pointer, the same
+way LiveSplit's `DeepPointer` does:
+
+* The **first** element is an address and is dereferenced directly (typically
+  `module_base_address('game.exe') + offset`).
+* Every **intermediate** offset is added to the current pointer and the result is
+  dereferenced.
+* The **last** offset is added to the final pointer but **not** dereferenced — the
+  returned address is where you read the value with `read_int` & co.
+
+```lua
+-- state("NFS13") { int x: "NFS13.exe", 0xCF852C, 0x8C, 0xFD0; }
+-- resolves to: read_int( deref( deref( base + 0xCF852C ) + 0x8C ) + 0xFD0 )
+x = read_int(pointer_path(nfs13 + 0xCF852C, 0x8C, 0xFD0))
+```
+
+Do not cache the result: pointer paths can change at runtime.
+
+## Examples
+
+* [`Docs/Examples/DefaultScript.lua`](Examples/DefaultScript.lua) — the default
+  template the game editor starts with.
+* [`Docs/Examples/NFS13-loadless.lua`](Examples/NFS13-loadless.lua) — a complete
+  loadless script for Need for Speed: Most Wanted (2012), converted from its
+  LiveSplit `.asl` definition.
+
+## Linux notes
+
+On Linux (including Proton/Wine games) scripts run in the external autosplitter —
+see [`WAYLAND-LINUX.md`](WAYLAND-LINUX.md) for setup, permissions and how it
+differs from the Windows injected autosplitter. Pointer size (32/64-bit games) is
+detected automatically.

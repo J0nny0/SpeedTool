@@ -89,6 +89,12 @@ Game time is accumulated externally: the script reports loading states with `tim
 `timer_set_not_loading`, and the timer only advances while the game is not loading. `on_frame` is polled
 at a fixed rate instead of being driven by a present hook.
 
+## Documentation
+
+* [`Docs/SCRIPTING.md`](Docs/SCRIPTING.md) — scripting overview: API reference, pointer paths, examples
+* [`Docs/WAYLAND-LINUX.md`](Docs/WAYLAND-LINUX.md) — all Linux/Wayland changes in this fork and how the external autosplitter works
+* [`Docs/Examples/`](Docs/Examples) — the default script template and a complete NFS: Most Wanted (2012) loadless script
+
 ## Future plans
 
 Some things we'd like to work on in the near future:
