@@ -1,7 +1,17 @@
 SpeedTool Wayland + Linux autosplitter build (x86_64)
-Built from: vibe/wayland-support-5f26ae @ 09ffd33 (NOT merged to main yet)
+Built from: vibe/wayland-support-5f26ae @ ca8f561 (NOT merged to main yet)
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
+
+New in this build:
+- Crash containment: if any window throws an error, SpeedTool now logs the
+  full exception with stack trace to the debug log and closes only that
+  window instead of quitting the whole process. The timer keeps running.
+  If anything still misbehaves, please send the tail of
+  ~/.local/share/speedtool/debug.log — it now contains the exact reason.
+- Hardened the 'Edit Times' path: no more crashes from categories with no
+  splits, PB files with null/empty split lists, or switching between games
+  with different category counts.
 
 New in this build:
 - Attach to process: right-click menu -> 'Attach to process...' opens a
