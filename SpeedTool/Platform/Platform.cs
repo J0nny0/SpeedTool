@@ -156,6 +156,7 @@ public sealed class Platform
         DebugLog.SharedInstance.Write($"Loading game {game.Name}");
         gameWatcher.Register(game.SourcePath);
         this.game = game;
+        activeCategory = 0;
         if(injector != null && injector.InjectedExeName != game.ExeName)
         {
             injector.Dispose();
@@ -190,6 +191,7 @@ public sealed class Platform
 
         DebugLog.SharedInstance.Write($"Unloading game {Game.Name}");
         game = null;
+        activeCategory = 0;
         injector?.Dispose();
         injector = null;
         run = null;
@@ -204,7 +206,18 @@ public sealed class Platform
 
             for(int i = 0; i < windows.Count; i++)
             {
-                windows[i].Cycle();
+                try
+                {
+                    windows[i].Cycle();
+                }
+                catch(Exception ex)
+                {
+                    // A window that throws mid-frame leaves its ImGui context in a broken
+                    // state; drop that window instead of taking the whole process down
+                    DebugLog.SharedInstance.Write($"Window {windows[i].GetType().Name} threw an exception, closing it:");
+                    DebugLog.SharedInstance.Write(ex.ToString());
+                    windows[i].Close();
+                }
             }
 
             var toClose = windows.Where(x => x.IsClosed).ToList();
@@ -225,7 +238,7 @@ public sealed class Platform
     public void SaveRunAsPB(RunInfo run)
     {
         EnsureLocalDir();
-        var fileName = game!.Name + "." + CurrentCategory!.Name;
+        var fileName = run.GameName + "." + run.CategoryName;
         fileName = Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c, '_'));
         var dst = ENV.LocalFilesPath + "pbs/" + fileName + ".json";
         var json = JsonSerializer.Serialize(run, typeof(RunInfo), SourceGeneratorContext.Default);
@@ -234,7 +247,7 @@ public sealed class Platform
 
     public RunInfo? GetPBRun(Game g, Category c)
     {
-        var fileName = game!.Name + "." + CurrentCategory!.Name;
+        var fileName = g.Name + "." + c.Name;
         fileName = Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c, '_'));
 
         var dst = ENV.LocalFilesPath + "pbs/" + fileName + ".json";

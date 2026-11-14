@@ -14,7 +14,8 @@ class TimeEditorWindow : Window
 {
     public TimeEditorWindow(RunInfo ri) : base(options, new Vector2D<int>(500, 500))
     {
-        splits = ri.Splits;
+        // A PB file can theoretically carry null or no splits; never let that kill the editor
+        splits = ri.Splits ?? Array.Empty<SplitInfo>();
         runInfo = ri;
     }
 
@@ -130,13 +131,15 @@ class TimeEditorWindow : Window
 
     private TimeCollection CollectTotalTimes()
     {
+        if(splits.Length == 0)
+            return new TimeCollection();
         return splits.Last().TotalTime;
     }
 
     private void DrawSplit(SplitInfo s, bool isGroup, int n)
     {
         ImGui.SetCursorPosX(s.Level * 10 + 5);
-        ImGui.Text(s.Name);
+        ImGui.Text(s.Name ?? "");
         ImGui.TableNextColumn();
         ImGui.Text(s.TotalTime.TimeRefFor(tm).ToSpeedToolTimerString());
         ImGui.TableNextColumn();

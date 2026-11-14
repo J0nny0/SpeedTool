@@ -1,10 +1,20 @@
 using SpeedTool.Global;
 using SpeedTool.Platform;
+using SpeedTool.Platform.Debugging;
 using SpeedTool.Util;
 using SpeedTool.Windows;
 
 var configPath = GetConfigPath();
 Console.WriteLine(configPath);
+
+// Last-resort crash capture: anything that escapes the window loop or fires on a
+// background thread must leave a stack trace in the debug log before we die
+AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+{
+    DebugLog.SharedInstance.Write($"Unhandled exception, terminating={args.IsTerminating}");
+    if(args.ExceptionObject is Exception ex)
+        DebugLog.SharedInstance.Write(ex.ToString());
+};
 
 Configuration.Init(configPath);
 Platform.SharedPlatform.AddWindow(new MainWindow());

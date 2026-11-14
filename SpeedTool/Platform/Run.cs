@@ -80,9 +80,16 @@ public class Run : ISplitsSource
 
     public RunInfo GetRunInfo()
     {
+        var allSplits = controller.AllSplits;
+        if(allSplits.Length == 0)
+        {
+            if(game == null)
+                return new RunInfo("unnamed", "unnamed", new TimeCollection(), []);
+            return new RunInfo(game!.Name, Platform.SharedPlatform.CurrentCategory!.Name, new TimeCollection(), []);
+        }
         if(game == null)
-            return new RunInfo("unnamed", "unnamed", controller.AllSplits.Last().Times, controller.AllSplits.Select(x => x.ToSplitInfo()).ToArray());
-        return new RunInfo(game!.Name, Platform.SharedPlatform.CurrentCategory!.Name, controller.AllSplits.Last().Times, controller.AllSplits.Select(x => x.ToSplitInfo()).ToArray());
+            return new RunInfo("unnamed", "unnamed", allSplits.Last().Times, allSplits.Select(x => x.ToSplitInfo()).ToArray());
+        return new RunInfo(game!.Name, Platform.SharedPlatform.CurrentCategory!.Name, allSplits.Last().Times, allSplits.Select(x => x.ToSplitInfo()).ToArray());
     }
 
     private void SaveRun()
