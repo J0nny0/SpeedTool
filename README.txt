@@ -1,7 +1,13 @@
 SpeedTool Wayland + Linux autosplitter build (x86_64)
-Built from: vibe/wayland-support-5f26ae @ 1f6cbb1 (NOT merged to main yet)
+Built from: vibe/wayland-support-5f26ae @ 3727e3f (NOT merged to main yet)
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
+
+New in this build (3727e3f):
+- Debug log rotation: debug.log is trimmed to ~2 MB (previous content kept as
+  debug.old.log), so sending logs after a crash is no longer an 18 MB upload.
+- Internal: env-gated self-test hook (SPEEDTOOL_AUTO_TEST=1) used to verify the
+  Edit Times path on a real GL stack; inert in normal use.
 
 New in this build (1f6cbb1 - crash diagnosis):
 - Crash-phase instrumentation: every window now logs one-time markers for its
