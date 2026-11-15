@@ -1,9 +1,19 @@
 SpeedTool Wayland + Linux autosplitter build (x86_64)
-Built from: vibe/wayland-support-5f26ae @ ca8f561 (NOT merged to main yet)
+Built from: vibe/wayland-support-5f26ae @ 1f6cbb1 (NOT merged to main yet)
 
 Run: chmod +x SpeedTool-wayland-x86_64.AppImage && ./SpeedTool-wayland-x86_64.AppImage
 
-New in this build:
+New in this build (1f6cbb1 - crash diagnosis):
+- Crash-phase instrumentation: every window now logs one-time markers for its
+  first frame ("first frame: update / ui done / render done"), and window
+  creation logs the window type + the exact data the Edit Times editor was
+  built from. The next crash log will name the exact phase where it dies.
+- Native crash capture: SIGABRT/SIGILL/SIGBUS now write "NATIVE CRASH:" to
+  the debug log before the process dies, so silent deaths leave a trace.
+- Window type is now part of the session log line (no more guessing by
+  framebuffer size).
+
+New in this build (ca8f561):
 - Crash containment: if any window throws an error, SpeedTool now logs the
   full exception with stack trace to the debug log and closes only that
   window instead of quitting the whole process. The timer keeps running.
