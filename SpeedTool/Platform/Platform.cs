@@ -206,6 +206,11 @@ public sealed class Platform
 
             for(int i = 0; i < windows.Count; i++)
             {
+                if(!cycledWindows.Contains(windows[i]))
+                {
+                    cycledWindows.Add(windows[i]);
+                    DebugLog.SharedInstance.Write($"Cycling window {windows[i].GetType().Name} (first cycle)");
+                }
                 try
                 {
                     windows[i].Cycle();
@@ -224,6 +229,7 @@ public sealed class Platform
             windows = windows.Where(x => !x.IsClosed).ToList();
             foreach (var closed in toClose)
             {
+                cycledWindows.Remove(closed);
                 //closed.Reset();
                 closed.Dispose();
             }
@@ -269,6 +275,7 @@ public sealed class Platform
 
     public void AddWindow(Window w)
     {
+        DebugLog.SharedInstance.Write($"Window added: {w.GetType().Name}");
         pendingWindows.Enqueue(w);
     }
 
@@ -360,6 +367,8 @@ public sealed class Platform
     GameWatcher gameWatcher;
 
     ConcurrentQueue<Window> pendingWindows = new();
+
+    HashSet<Window> cycledWindows = new();
 
     NullSplitsSource nullSplits = new();
 

@@ -2,6 +2,7 @@ using System.Numerics;
 using ImGuiNET;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
+using SpeedTool.Platform.Debugging;
 using SpeedTool.Splits;
 using SpeedTool.Timer;
 using SpeedTool.Util;
@@ -17,6 +18,11 @@ class TimeEditorWindow : Window
         // A PB file can theoretically carry null or no splits; never let that kill the editor
         splits = ri.Splits ?? Array.Empty<SplitInfo>();
         runInfo = ri;
+
+        // Log the data this editor was built from: if the crash is caused by pathological
+        // PB/profile data, this line shows it before any UI work happens
+        DebugLog.SharedInstance.Write($"TimeEditorWindow created: game='{runInfo.GameName}' category='{runInfo.CategoryName}' " +
+                                      $"splits={splits.Length} levels=[{string.Join(",", splits.Select(s => s.Level))}]");
     }
 
     private SplitInfo[] splits;
@@ -27,6 +33,8 @@ class TimeEditorWindow : Window
     private TimingMethod tm = TimingMethod.RealTime;
 
     private int i = 0;
+
+    private bool firstUiLogged;
 
     private static WindowOptions options
     {
@@ -40,6 +48,12 @@ class TimeEditorWindow : Window
 
     protected override void OnUI(double dt)
     {
+        if(!firstUiLogged)
+        {
+            firstUiLogged = true;
+            DebugLog.SharedInstance.Write($"TimeEditorWindow: first UI frame, splits={splits.Length} tm={tm}");
+        }
+
         var viewport = ImGui.GetMainViewport();
         ImGui.SetNextWindowPos(new Vector2(0, 0));
         ImGui.SetNextWindowSize(viewport.Size);

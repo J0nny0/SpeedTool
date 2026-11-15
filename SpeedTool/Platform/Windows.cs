@@ -53,6 +53,10 @@ public class Window : IDisposable
 
         window.Render += delta =>
         {
+            // One-time frame-phase markers: if a window dies silently (native crash),
+            // the last marker in the log names the exact phase it died in
+            if(!firstFrameDone)
+                DebugLog.SharedInstance.Write($"{GetType().Name}: first frame: update");
             controller?.Update((float)delta);
             gl?.Viewport(0, 0, (uint)sizes.X, (uint)sizes.Y);
             gl?.ClearColor(clearColor);
@@ -80,11 +84,18 @@ public class Window : IDisposable
             ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0);
             OnUI(delta);
             OnAfterUI(delta);
+            if(!firstFrameDone)
+                DebugLog.SharedInstance.Write($"{GetType().Name}: first frame: ui done");
 
             ImGui.PopStyleColor(12);
             ImGui.PopStyleVar();
 
             controller?.Render();
+            if(!firstFrameDone)
+            {
+                firstFrameDone = true;
+                DebugLog.SharedInstance.Write($"{GetType().Name}: first frame: render done");
+            }
         };
 
         window.Resize += sizes =>
@@ -123,7 +134,7 @@ public class Window : IDisposable
         window.Size = sizes;
 
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            DebugLog.SharedInstance.Write($"Window: session WAYLAND_DISPLAY='{Environment.GetEnvironmentVariable("WAYLAND_DISPLAY")}' " +
+            DebugLog.SharedInstance.Write($"Window {GetType().Name}: session WAYLAND_DISPLAY='{Environment.GetEnvironmentVariable("WAYLAND_DISPLAY")}' " +
                                           $"XDG_SESSION_TYPE='{Environment.GetEnvironmentVariable("XDG_SESSION_TYPE")}' " +
                                           $"DISPLAY='{Environment.GetEnvironmentVariable("DISPLAY")}' " +
                                           $"framebuffer={window.FramebufferSize.X}x{window.FramebufferSize.Y}");
@@ -313,6 +324,8 @@ public class Window : IDisposable
     }
 
     Dictionary<string, ImFontPtr> fonts;
+
+    private bool firstFrameDone;
     
     private GL? gl;
     private IInputContext? input;
