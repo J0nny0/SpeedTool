@@ -34,7 +34,7 @@ internal static class LinuxProcesses
             names.Add(name);
         }
 
-        return names.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n).ToArray();
+        return names.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
     private static string GetProcessExeName(string procDir)

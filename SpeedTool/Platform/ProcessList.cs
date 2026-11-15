@@ -13,7 +13,7 @@ internal static class ProcessList
             return Process.GetProcesses()
                 .Select(p => p.ProcessName + ".exe")
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(n => n)
+                .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
         }
 

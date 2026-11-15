@@ -46,11 +46,24 @@ public sealed class DebugLog
         try
         {
             Directory.CreateDirectory(ENV.LocalFilesPath);
-            File.AppendAllText(Path.Combine(ENV.LocalFilesPath, "debug.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} {message}\n");
+            var path = Path.Combine(ENV.LocalFilesPath, "debug.log");
+            RotateIfNeeded(path);
+            File.AppendAllText(path, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} {message}\n");
         }
         catch
         {
             // Nowhere to write the log, keep it in memory only
+        }
+    }
+
+    // Keep the log small enough to send: one previous generation is kept as debug.old.log
+    private void RotateIfNeeded(string path)
+    {
+        var info = new FileInfo(path);
+        if(info.Exists && info.Length > 2_000_000)
+        {
+            File.Copy(path, path + ".old.log", true);
+            File.Delete(path);
         }
     }
 

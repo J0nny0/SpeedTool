@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using SpeedTool.Platform.Linux;
 using System.Diagnostics.CodeAnalysis;
 using SpeedTool.Platform;
+using SpeedTool.Platform.Debugging;
 
 namespace SpeedTool.Windows;
 
@@ -75,6 +76,9 @@ class MainWindow : SPWindow
 
     protected override void OnUI(double dt)
     {
+        if(Environment.GetEnvironmentVariable("SPEEDTOOL_AUTO_TEST") == "1")
+            AutoTestTick();
+
         var viewport = ImGui.GetMainViewport();
         ImGui.SetNextWindowPos(new Vector2(0, 0));
         ImGui.SetNextWindowSize(viewport.Size);
@@ -236,6 +240,37 @@ class MainWindow : SPWindow
         }
     }
 
+    // Headless self-test hook (SPEEDTOOL_AUTO_TEST=1): load a stub game, then open
+    // the timing editor exactly the way the right-click menu does - mid-frame.
+    // Used to reproduce the "Edit Times" crash on a machine with a real GL stack.
+    void AutoTestTick()
+    {
+        autoTestFrame++;
+        if(autoTestFrame == 5 && !autoTestLoaded)
+        {
+            autoTestLoaded = true;
+            var splits = new[]
+            {
+                new Split("Load"),
+                new Split("Race 1"),
+                new Split("Race 2"),
+            };
+            var game = new Game("AutoTest Game", "autotest.exe", [new Category("any%", splits)]);
+            platform.LoadGame(game);
+            var run = new Run(game, game.GetCategories()[0], null);
+            platform.SaveRunAsPB(run.GetRunInfo());
+            DebugLog.SharedInstance.Write("AUTOTEST: game loaded and PB saved");
+        }
+        if(autoTestFrame == 15 && !autoTestOpened)
+        {
+            autoTestOpened = true;
+            var pb = platform.GetPBRun(platform.Game!, platform.CurrentCategory!) ??
+                     new Run(platform.Game!, platform.CurrentCategory!, null).GetRunInfo();
+            DebugLog.SharedInstance.Write("AUTOTEST: opening TimeEditorWindow mid-frame");
+            platform.AddWindow(new TimeEditorWindow(pb));
+        }
+    }
+
     private TimerUIBase SelectUI()
     {
         switch(Configuration.GetSection<GeneralConfiguration>().TimerUI)
@@ -274,6 +309,10 @@ class MainWindow : SPWindow
 
     private bool autoLoadGame;
     private ColorSettings colorSettings;
+
+    private int autoTestFrame;
+    private bool autoTestLoaded;
+    private bool autoTestOpened;
     Platform.Platform platform;
 
     TimerUIBase ui;
