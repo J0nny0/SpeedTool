@@ -79,9 +79,19 @@ Logs: ~/.local/share/speedtool/debug.log
 
 ## Injection-only experiment build
 
-- SpeedTool-injection-only-x86_64.AppImage — experiment/injection-only @ 36a6996:
+- SpeedTool-injection-only-x86_64.AppImage — experiment/injection-only @ cb12598:
   the memory-based external autosplitter is STRIPPED. Loadless works only via
   the injected timer (TCP 127.0.0.1:47774, no env var needed). If loadless
   timing shows any life in this build, it came from injection — that is the
   point. The wine-dist/ folder (injector tools) lives on the
   experiment/injection-only branch; see Docs/WINE-INJECTION.md there.
+
+  New in cb12598: a busy TCP port or a failing injection loader no longer
+  surfaces as a false "Broken file" dialog when dropping a profile — it is
+  logged to debug.log and loadless timing is simply disabled.
+
+  Experiment verdict (see Docs/WINE-INJECTION.md): EasyHook-based injection
+  fails at its native stage under Wine (code 5); real .NET 4.8 + EasyHook's
+  managed layers + the TCP transport all work. TimerInjector.exe is now built
+  32-bit (injector and target must share one architecture); the rebuilt
+  wine-dist/TimerInjector.exe is on the branch.
