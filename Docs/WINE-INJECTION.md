@@ -22,6 +22,15 @@
 > projects), but that requires a native bootstrap DLL instead of the managed
 > EasyHook flow — significant additional work, not pursued in this branch.
 
+>
+> **Wine-general confirmation:** the identical `Code: 5` failure also occurs
+> when injecting into a bare `wine notepad` target (tested in the same
+> prefix), so the wall is EasyHook-under-Wine itself, not anything specific
+> to the game. That run also showed EasyHook falling back to its service
+> helper (`EasyHook64Svc`) and Wine's RPC layer rejecting it
+> (`err:rpc:client_get_handle null context handle isn't allowed`) before the
+> native stub stage failed.
+
 ## Why injection is attractive (and why it may not work)
 
 On Windows, SpeedTool's standout feature is **injected timing**: a DLL inside
