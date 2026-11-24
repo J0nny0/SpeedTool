@@ -76,3 +76,12 @@ Logs: ~/.local/share/speedtool/debug.log
   inside the game's prefix. Full instructions:
   Docs/WINE-INJECTION.md on that branch. Without the env var this build
   behaves exactly like the main one.
+
+## Injection-only experiment build
+
+- SpeedTool-injection-only-x86_64.AppImage — experiment/injection-only @ 36a6996:
+  the memory-based external autosplitter is STRIPPED. Loadless works only via
+  the injected timer (TCP 127.0.0.1:47774, no env var needed). If loadless
+  timing shows any life in this build, it came from injection — that is the
+  point. The wine-dist/ folder (injector tools) lives on the
+  experiment/injection-only branch; see Docs/WINE-INJECTION.md there.
