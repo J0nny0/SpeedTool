@@ -91,12 +91,17 @@ Windows keeps the named pipe as before.
    `TimerInjector.exe` accepts a numeric PID or an exe name.
 
 6. **Lua runtime** — the injected DLL needs `lua54.dll` matching the game's
-   bitness (32-bit for NFS13.exe). A copy ships in `wine-dist/`; if the game
-   fails to load it, place it in the game's own directory.
+   bitness (32-bit for NFS13.exe). `wine-dist/lua54.dll` is the 32-bit copy,
+   `wine-dist/lua54-x64.dll` the 64-bit one. If the game fails to load it,
+   place the bitness-correct file in the game's own directory as `lua54.dll`.
+   A wrong bitness here is the single most common failure: the timer connects
+   and the script never runs.
 
 7. Watch SpeedTool's debug log: `Pipe: injected timer connected over TCP`,
    then `InjectedTimer said: Game Auto-detected as DirectX 11` (or similar),
-   then script `debug_message` output and timer ticks.
+   then script `debug_message` output and timer ticks. If nothing connects:
+   the SpeedTool side listens on 127.0.0.1:47774 from the moment the game
+   profile is loaded, so load the profile first, then inject.
 
 ## If it fails
 
