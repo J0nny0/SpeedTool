@@ -45,7 +45,20 @@ public sealed class Pipe : IDisposable
     private void StartTcpListener(string script, int port)
     {
         tcpListener = new TcpListener(IPAddress.Loopback, port);
-        tcpListener.Start();
+        try
+        {
+            tcpListener.Start();
+        }
+        catch(Exception ex)
+        {
+            // A dead TCP listener must never take down game loading (a throw here
+            // used to surface as a misleading "Broken file" dialog on drag&drop)
+            tcpListener = null;
+            DebugLog.SharedInstance.Write($"Pipe: could not listen on TCP 127.0.0.1:{port} " +
+                                          "(port in use? another SpeedTool instance?), injection disabled:");
+            DebugLog.SharedInstance.Write(ex.ToString());
+            return;
+        }
         DebugLog.SharedInstance.Write($"Pipe: waiting for injected timer on TCP 127.0.0.1:{port}");
         tcpListener.AcceptTcpClientAsync().ContinueWith(t =>
         {

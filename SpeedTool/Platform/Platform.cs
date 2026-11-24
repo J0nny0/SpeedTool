@@ -308,7 +308,18 @@ public sealed class Platform
             else
             {
                 DebugLog.SharedInstance.Write("Injection-only branch: using injected timer (TCP transport)");
-                injector = new InjectorHandler(game.ExeName);
+                try
+                {
+                    injector = new InjectorHandler(game.ExeName);
+                }
+                catch(Exception ex)
+                {
+                    // Never let a failing loader bubble into game loading (it would
+                    // show up as a misleading "Broken file" on drag&drop)
+                    injector = null;
+                    DebugLog.SharedInstance.Write("InjectorHandler creation failed, loadless timing disabled:");
+                    DebugLog.SharedInstance.Write(ex.ToString());
+                }
             }
             injector?.ReloadScript(game.Script);
             sources[(int)TimingMethod.Loadless] = injector == null ? new NoTimer() : injector;

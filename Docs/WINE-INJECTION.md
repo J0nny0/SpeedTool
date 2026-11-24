@@ -5,6 +5,22 @@
 > fundamentally uncertain — treat this as a research branch, not a feature.
 > The external autosplitter remains the default and is untouched unless you
 > opt in (see below).
+>
+> **Experiment result (NFS MW 2012 / NFS13.exe, Proton Experimental, CachyOS,
+> real .NET 4.8 installed with system wine):** the managed stages all work
+> (real CLR loads under Proton, EasyHook loads, `RemoteHooking.InjectEx`
+> runs), but the final native step fails with
+> `STATUS_INTERNAL_ERROR: Unknown error in injected assembler code (Code: 5)`
+> — EasyHook's injection assembler stub crashes inside the target because the
+> code relies on `ntdll` threading/loader behavior Wine does not implement.
+> Note the injector built on this branch is deliberately 32-bit: the 64-bit
+> build takes EasyHook's cross-bitness WOW64-bypass path, which fails earlier
+> (access denied reading the 32-bit target's module list). EasyHook-based
+> injection into 32-bit Proton game processes is therefore a documented dead
+> end. Injection *conceptually* still works under Proton via native methods
+> (APC injection / manual PE mapping, e.g. the community `proton-injector`
+> projects), but that requires a native bootstrap DLL instead of the managed
+> EasyHook flow — significant additional work, not pursued in this branch.
 
 ## Why injection is attractive (and why it may not work)
 
@@ -18,6 +34,10 @@ reasons:
 2. EasyHook relies on undocumented `ntdll` internals that Wine only partially
    implements, and injecting the .NET CLR into a Wine process requires a real
    .NET Framework in the prefix (wine-mono is usually not enough).
+
+Both reasons were confirmed on real hardware: reason 1 was removed by this
+branch's TCP transport, and reason 2 kills the EasyHook flow at its native
+injection stage (see the status note above).
 
 This branch removes reason 1 entirely and gives you the tools to test
 reason 2 on real hardware.
