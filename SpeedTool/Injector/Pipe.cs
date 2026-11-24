@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
@@ -7,12 +8,25 @@ namespace SpeedTool.Injector;
 
 public sealed class Pipe : IDisposable
 {
+    /// <summary>
+    /// True when the injected timer transport is TCP (always on Linux in the
+    /// injection-only branch, or when SPEEDTOOL_TCP_PORT is set).
+    /// </summary>
+    internal static bool UseTcp =>
+        RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
+        Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") != null;
+
+    /// <summary>TCP port for the injected timer transport (default 47774).</summary>
+    internal static int TcpPort =>
+        int.Parse(Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") ?? "47774");
+
     public Pipe(string script)
     {
-        var portEnv = Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT");
-        if(portEnv != null)
+        if(UseTcp)
         {
-            StartTcpListener(script, int.Parse(portEnv));
+            // Injection-only branch: TCP is the only transport on Linux.
+            // Default port 47774, overridable with SPEEDTOOL_TCP_PORT.
+            StartTcpListener(script, TcpPort);
             return;
         }
 

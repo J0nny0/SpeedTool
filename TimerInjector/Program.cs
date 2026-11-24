@@ -37,7 +37,8 @@ class Program
         {
             // TCP transport is enabled by setting SPEEDTOOL_TCP_PORT for the injector;
             // an empty value keeps the default named pipe transport.
-            var tcpPort = Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") ?? "";
+            // Injection-only branch: TCP is the only transport, default port 47774
+            var tcpPort = Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") ?? "47774";
 
             // inject into existing process
             RemoteHooking.Inject(

@@ -295,14 +295,21 @@ public sealed class Platform
 
         if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
+            // INJECTION-ONLY BRANCH
+            // The memory-based external autosplitter is stripped from this branch on
+            // purpose: loadless timing works exclusively through the injected timer
+            // (TCP transport), so any timing seen here is proven to come from injection.
             injector?.Dispose();
-            if(Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") != null && game.ExeName != "")
+            if(game.ExeName == "")
             {
-                DebugLog.SharedInstance.Write("Injection experiment enabled (SPEEDTOOL_TCP_PORT is set)");
-                injector = new InjectorHandler(game.ExeName);
+                DebugLog.SharedInstance.Write("Injection-only branch: game has no exe name, no loader");
+                injector = null;
             }
             else
-                injector = game.ExeName == "" ? null : new ExternalAutosplitter(game.ExeName);
+            {
+                DebugLog.SharedInstance.Write("Injection-only branch: using injected timer (TCP transport)");
+                injector = new InjectorHandler(game.ExeName);
+            }
             injector?.ReloadScript(game.Script);
             sources[(int)TimingMethod.Loadless] = injector == null ? new NoTimer() : injector;
             return;

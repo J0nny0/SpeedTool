@@ -40,18 +40,23 @@ SpeedTool (Linux, AppImage)                Wine prefix
 
 The message protocol is byte-for-byte the Windows one (`script <line>`,
 `script_load`, `start`, `reset`, `timer <ticks>`, `split`, `debug_message`),
-only the transport changes. Both sides fall back to the original named pipe
-when `SPEEDTOOL_TCP_PORT` is not set, so Windows behaviour is unchanged.
+only the transport changes. This is the **injection-only** branch: on Linux
+TCP is the only transport and the memory-based external autosplitter has been
+stripped, so any loadless timing you see is proven to come from injection.
+Windows keeps the named pipe as before.
 
 ## How to test
 
-1. **SpeedTool side** — use a build from this branch and enable TCP mode:
+1. **SpeedTool side** — use the AppImage built from this branch. No env var
+   is needed: TCP on port 47774 is the default here.
 
    ```sh
-   SPEEDTOOL_TCP_PORT=47774 ./SpeedTool-wayland-x86_64.AppImage
+   ./SpeedTool-injection-only-x86_64.AppImage
    ```
 
-   The log will show `Injection experiment enabled` and
+   (Optional: set `SPEEDTOOL_TCP_PORT` to use a different port.)
+
+   The log will show `Injection-only branch: using injected timer` and
    `waiting for injected timer on TCP 127.0.0.1:47774`. Select your game,
    enter the script and set timing method to Loadless. Keep SpeedTool open.
 
@@ -102,8 +107,9 @@ when `SPEEDTOOL_TCP_PORT` is not set, so Windows behaviour is unchanged.
 - **Connects but no frames**: the graphics autodetect hooks Wine's
   `wined3d`/`dxgi` implementations; a `debug_message Failed to auto-detect`
   means none of the supported APIs were found.
-- **Rollback**: unset `SPEEDTOOL_TCP_PORT` (or use a build from `main`) and
-  the external autosplitter takes over again. Nothing else changes.
+- **Rollback**: switch back to the `vibe/wayland-support-5f26ae` or
+  `appimage-test` build (not this branch) and the proven memory-based
+  external autosplitter is back. Nothing else changes.
 
 ## Accuracy note
 

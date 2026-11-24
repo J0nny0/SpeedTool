@@ -11,7 +11,10 @@ public sealed class InjectorHandler : IAutosplitter
     {
         exeName = lookForExe.Replace(".exe", "");
         InjectedExeName = lookForExe;
-        useTcp = Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") != null;
+        // Injection-only branch: on Linux TCP is the only transport, so it is always
+        // enabled; SPEEDTOOL_TCP_PORT optionally overrides the default port 47774
+        useTcp = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
+                 Environment.GetEnvironmentVariable("SPEEDTOOL_TCP_PORT") != null;
         DebugLog.SharedInstance.Write($"Attempting to inject timer into {lookForExe}");
         if(useTcp)
         {

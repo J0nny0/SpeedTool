@@ -4,7 +4,8 @@ Windows injector stack for the Wine/Proton injection experiment
 Usage: see Docs/WINE-INJECTION.md in the repository root.
 
 Quick start:
-1. Run SpeedTool (build from this branch) with SPEEDTOOL_TCP_PORT=47774 set.
+1. Run SpeedTool (build from this branch). No env var needed: TCP port 47774
+   is the default on this injection-only branch (override: SPEEDTOOL_TCP_PORT).
 2. Copy this folder somewhere permanent, e.g. ~/SpeedToolInject
    (Wine sees it as Z:\SpeedToolInject).
 3. In the game's Wine prefix: winetricks dotnet48 (EasyHook needs the real CLR).
