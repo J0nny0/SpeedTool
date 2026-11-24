@@ -63,8 +63,14 @@ Windows keeps the named pipe as before.
 2. **Windows-side tools** — the `wine-dist/` folder in this branch contains
    the compiled injector stack (`TimerInjector.exe`, `InjectedTimer.dll`,
    EasyHook runtime, NLua + `lua54.dll`). Copy it somewhere on disk, e.g.
-   `~/SpeedToolInject`. Wine's `Z:` drive maps to `/`, so it is reachable
-   from the prefix as `Z:\SpeedToolInject`.
+   `~/SpeedToolInject`. Wine's `Z:` drive maps to `/` (the filesystem root), so
+   the Windows path is `Z:\home\jon\SpeedToolInject\...` — but wine also accepts
+   plain Unix paths, so `wine ~/SpeedToolInject/TimerInjector.exe` works.
+   NOTE: `TimerInjector.exe` is built 32-bit on purpose. EasyHook requires the
+   injector and the injected process to share one architecture; the 64-bit build
+   takes a cross-bitness "WOW64 bypass" code path that Wine does not support
+   (`WOW64Bypass.Install()` fails with access denied reading the 32-bit target's
+   module list).
 
 3. **Prefix requirements** (only needed once, in the game's prefix):
 
@@ -73,19 +79,31 @@ Windows keeps the named pipe as before.
    winetricks dotnet48
    ```
 
-   With Proton, use `protontricks <appid> dotnet48`. Also make sure Proton's
-   network isolation is off (it is by default), otherwise 127.0.0.1 traffic
-   between SpeedTool and the game is blocked.
+   With Proton, `protontricks <appid> dotnet48` is the normal path. Two known
+   pitfalls:
+   - Current Steam clients ship `appcache/appinfo` in a new sharded (V42)
+     format that older protontricks versions cannot parse (upstream issues
+     #516/#521). If protontricks crashes with `appinfo.vdf` FileNotFound or an
+     `IndexError` in a vdf parser, bypass it entirely:
+     `WINEPREFIX=<prefix> WINE="$(which wine)" winetricks -q dotnet48`
+   - Proton's own wine cannot run the .NET 4.x installers at all — they abort
+     with `returned status 67`. That is why the fallback above installs with
+     the system's wine; the installed framework lives in the prefix and Proton
+     reads it normally afterwards. A `runtime32.dll`/runtime error dialog on
+     the first game launch after this is a known cosmetic side effect.
+
+   Also make sure Proton's network isolation is off (it is by default),
+   otherwise 127.0.0.1 traffic between SpeedTool and the game is blocked.
 
 4. **Start the game** via Steam as usual, wait for it to reach a menu.
 
 5. **Inject** — either by PID or by process name:
 
    ```sh
-   # find the game's *Windows* PID inside the prefix:
-   protontricks -c 'wine taskmgr' <appid>
-   # then, from the prefix (example via protontricks):
-   protontricks -c 'wine Z:\\SpeedToolInject\\TimerInjector.exe NFS13.exe' <appid>
+   # with only WINEPREFIX pointing at the game's prefix (no WINE override —
+   # the injector itself must run under Proton's wine so it shares the
+   # game's prefix):
+   wine ~/SpeedToolInject/TimerInjector.exe NFS13.exe
    ```
 
    `TimerInjector.exe` accepts a numeric PID or an exe name.

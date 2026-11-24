@@ -3,6 +3,10 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net46</TargetFramework>
+    <!-- Must run as 32-bit: the injector and the injected game process must share an
+         architecture, otherwise EasyHook's cross-bitness WOW64 bypass is used, which
+         cannot read a 32-bit target's module list under Wine (Access denied). -->
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
